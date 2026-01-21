@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Instant QR Scanner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+}
+
+h2 {
+    margin: 10px;
+}
+
+#camera {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+#result {
+    margin-top: 15px;
+    background: #222;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 16px;
+    word-break: break-all;
+}
+
+.status {
+    color: #00ff99;
+    margin-top: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📷 QR Code Scanner</h2>
+<div class="status">Point camera to QR code</div>
+
+<video id="camera" autoplay playsinline></video>
+<canvas id="canvas" hidden></canvas>
+
+<div id="result">Waiting for scan...</div>
+
+<!-- QR decoding library -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+const video = document.getElementById("camera");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const resultBox = document.getElementById("result");
+
+// Start camera
+navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "environment" }
+}).then(stream => {
+    video.srcObject = stream;
+    requestAnimationFrame(scanQR);
+}).catch(err => {
+    alert("Camera access denied!");
+});
+
+// Scan continuously
+function scanQR() {
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (code) {
+            resultBox.innerHTML = "✅ Scanned Data:<br><br>" + code.data;
+        }
+    }
+    requestAnimationFrame(scanQR);
+}
+</script>
+
+</body>
+</html>
